@@ -10,7 +10,11 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Calendar Demo'),
       ),
-      body: CalendarWidget(),
+      body: CalendarWidget( dateActions: {
+        DateTime(2025,1,25) : () => print('Chinx'),
+        DateTime(2024,12,25) : () => print('xmas'),
+        DateTime(2024,10,10) : () => print('It is October'),
+      },),
 
     );
   }

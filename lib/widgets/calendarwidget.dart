@@ -69,26 +69,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     }
   }
 
-
-  // getMonth() {
-  //   int nextMonth = 0;
-  //   int nextMonthYear = selectedDate.year;
-  //   int prevMonth = 0;
-  //   int prevMonthYear = selectedDate.year;
-
-  //   //Get the next month
-  //   selectedDate.month + 1 == 13 ? { nextMonth = 1, nextMonthYear += 1 } : nextMonth = selectedDate.month + 1;
-  //   DateTime nextMonthDate = DateTime(nextMonthYear,nextMonth);
-
-  //   //Get the previous month
-  //   selectedDate.month - 1 == 0 ? { prevMonth = 12, prevMonthYear -= 1 } : prevMonth = selectedDate.month - 1;
-  //   DateTime prevMonthDate = DateTime(prevMonthYear,prevMonth);
-
-  //   // print('NEXT MONTH $nextMonthDate');
-  //   // print('PREV MONTH $prevMonthDate');
-
-  // }
-
   //Get the previous monday
   getMonday(DateTime date) {
     if(date.weekday == DateTime.monday) {
@@ -108,20 +88,14 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   }
 
   List<List<CalendarDay>> getCalendarDays() {
-    //selectedDate = DateTime(2025,10,1);
-    int start = DateTime(selectedDate.year,selectedDate.month).day;
     DateTime lastOfMonth =  getFirstNextMonth().subtract(const Duration(days: 1));
-    int end = lastOfMonth.day;
     DateTime firstMonday = getMonday(DateTime(selectedDate.year,selectedDate.month));
     DateTime lastSunday = getSunday(lastOfMonth);
 
     //2 fixes daylight saving when march 23
     int numberOfWeeks = (lastSunday.difference(firstMonday).inDays + 2) ~/ 7;
-    int dayDiff = (lastSunday.difference(firstMonday).inDays + 1);
 
-    print('START= $start, END=$end DAYDIFF=$dayDiff FIRSTOFMONTH=${DateTime(selectedDate.year,selectedDate.month)} MONDAY=$firstMonday SUNDAY=$lastSunday WEEKS=$numberOfWeeks');
     //Iterate through to generate the calendar day objects
-    //DateTime incDate = firstMonday;
     //Try to resolve daylight savings issue
     DateTime incDate =  DateTime(firstMonday.year,firstMonday.month,firstMonday.day,4);
     List<List<CalendarDay>> weeks = [];
@@ -135,10 +109,20 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         DateTime today = DateTime.now();
 
         if( (incDate.day == today.day) && (incDate.month == today.month) && (incDate.year == today.year) ) {
-          //print("SETTING ACTIVE, current=$today, inc=$incDate");
           dayState = DayState.current;
         } else if(incDate.month == selectedDate.month) {
           dayState = DayState.enabled;
+        }
+
+        Function? clickAction;
+
+        //Check for action
+        if(widget.dateActions != null) {
+          clickAction = widget.dateActions?[DateTime(incDate.year,incDate.month,incDate.day)];
+          if(clickAction != null) {
+            dayState = DayState.active;
+          }
+          
         }
 
         weekDays.add(
@@ -146,6 +130,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             dayNumber: incDate.day, 
             date: incDate,
             dayState: dayState,
+            clickAction: clickAction,
           )
         );
 
@@ -154,7 +139,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       weeks.add(weekDays);
     }
 
-    print("The weeks are $weeks");  
     return weeks;
   }
 
@@ -164,6 +148,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         return Colors.blue.shade100;
       case DayState.current:
         return Colors.yellow.shade100;
+      case DayState.active:
+        return Colors.purple.shade100;
       default:
         return Colors.grey.shade100;
     }
@@ -180,7 +166,19 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
       for(CalendarDay calDay in week) {
         calDays.add(
-          Container(
+          calDay.clickAction != null
+          ? Container(
+            color: getDayColor(calDay.dayState),
+            child: InkWell(
+              onLongPress:  () => calDay.clickAction!(),
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Text(calDay.dayNumber.toString()),
+              ),
+            ),
+          )
+          : Container(
             width: 40,
             height: 40,
             color: getDayColor(calDay.dayState),
@@ -206,11 +204,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print('Next month ${getFirstNextMonth().toString()}');
-    print('Prev month ${getFirstPrevMonth().toString()}');
-
-    //getCalendarDays();
-
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Column(
@@ -245,6 +238,53 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 ),
               ],
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Mon', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Tue', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Wed', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Thu', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Fri', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Sat', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                color: Colors.grey.shade800,
+                child: const Text('Sun', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ),
+            ],
           ),
           getCalendarBlock()
         ],
